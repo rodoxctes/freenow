@@ -4,23 +4,19 @@ import com.mytaxi.controller.mapper.DriverMapper;
 import com.mytaxi.datatransferobject.DriverDTO;
 import com.mytaxi.domainobject.DriverDO;
 import com.mytaxi.domainvalue.OnlineStatus;
+import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
+import com.mytaxi.exception.OfflineStatusException;
 import com.mytaxi.service.driver.DriverService;
-import java.util.List;
-import javax.validation.Valid;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.List;
 
 /**
  * All operations with a driver will be routed by this controller.
@@ -28,6 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("v1/drivers")
+@Api(
+    value = "Drivers",
+    tags = {"Drivers"}
+)
 public class DriverController
 {
 
@@ -77,5 +77,27 @@ public class DriverController
     public List<DriverDTO> findDrivers(@RequestParam OnlineStatus onlineStatus)
     {
         return DriverMapper.makeDriverDTOList(driverService.find(onlineStatus));
+    }
+
+
+    @PutMapping("/{driverId}/car/{carId}")
+    @ApiOperation(
+        value = "Select a car"
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void selectCar(@Valid @PathVariable long driverId, @PathVariable long carId)
+        throws EntityNotFoundException, CarAlreadyInUseException, OfflineStatusException
+    {
+        driverService.selectCar(driverId, carId);
+    }
+
+
+    @DeleteMapping("/{driverId}/car")
+    @ApiOperation(
+        value = "Deselect a car"
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deselectCar(@Valid @PathVariable long driverId) throws EntityNotFoundException {
+        driverService.deselectCar(driverId);
     }
 }

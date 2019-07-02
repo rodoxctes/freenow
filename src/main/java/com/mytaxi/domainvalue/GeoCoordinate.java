@@ -89,16 +89,10 @@ public class GeoCoordinate
         final GeoCoordinate other = (GeoCoordinate) obj;
         if (this.point == null)
         {
-            if (other.point != null)
-            {
-                return false;
-            }
+            return other.point == null;
         }
-        else if (!this.point.equals(other.point))
-        {
-            return false;
-        }
-        return true;
+        else
+            return this.point.equals(other.point);
     }
 
 

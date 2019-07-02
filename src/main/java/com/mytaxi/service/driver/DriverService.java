@@ -2,8 +2,11 @@ package com.mytaxi.service.driver;
 
 import com.mytaxi.domainobject.DriverDO;
 import com.mytaxi.domainvalue.OnlineStatus;
+import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
+import com.mytaxi.exception.OfflineStatusException;
+
 import java.util.List;
 
 public interface DriverService
@@ -19,4 +22,7 @@ public interface DriverService
 
     List<DriverDO> find(OnlineStatus onlineStatus);
 
+    DriverDO selectCar(Long driverId, Long carId) throws EntityNotFoundException, OfflineStatusException, CarAlreadyInUseException;
+
+    DriverDO deselectCar(Long driverId) throws EntityNotFoundException;
 }

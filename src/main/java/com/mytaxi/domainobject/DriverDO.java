@@ -2,18 +2,11 @@ package com.mytaxi.domainobject;
 
 import com.mytaxi.domainvalue.GeoCoordinate;
 import com.mytaxi.domainvalue.OnlineStatus;
-import java.time.ZonedDateTime;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(
@@ -24,7 +17,7 @@ public class DriverDO
 {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -53,6 +46,9 @@ public class DriverDO
     @Column(nullable = false)
     private OnlineStatus onlineStatus;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "car_id")
+    private CarDO car;
 
     private DriverDO()
     {
@@ -67,8 +63,20 @@ public class DriverDO
         this.coordinate = null;
         this.dateCoordinateUpdated = null;
         this.onlineStatus = OnlineStatus.OFFLINE;
+        this.car = null;
     }
 
+    public DriverDO(Long id, String username, String password)
+    {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.deleted = false;
+        this.coordinate = null;
+        this.dateCoordinateUpdated = null;
+        this.onlineStatus = OnlineStatus.OFFLINE;
+        this.car = null;
+    }
 
     public Long getId()
     {
@@ -128,6 +136,14 @@ public class DriverDO
     {
         this.coordinate = coordinate;
         this.dateCoordinateUpdated = ZonedDateTime.now();
+    }
+
+    public void setCar(CarDO car) {
+        this.car = car;
+    }
+
+    public CarDO getCar() {
+        return car;
     }
 
 }

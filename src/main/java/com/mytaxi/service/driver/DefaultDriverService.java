@@ -1,17 +1,23 @@
 package com.mytaxi.service.driver;
 
 import com.mytaxi.dataaccessobject.DriverRepository;
+import com.mytaxi.domainobject.CarDO;
 import com.mytaxi.domainobject.DriverDO;
 import com.mytaxi.domainvalue.GeoCoordinate;
 import com.mytaxi.domainvalue.OnlineStatus;
+import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
-import java.util.List;
+import com.mytaxi.exception.OfflineStatusException;
+import com.mytaxi.service.car.CarService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Service to encapsulate the link between DAO and controller and to have business logic for some driver specific things.
@@ -25,10 +31,13 @@ public class DefaultDriverService implements DriverService
 
     private final DriverRepository driverRepository;
 
+    private final CarService carService;
 
-    public DefaultDriverService(final DriverRepository driverRepository)
+
+    public DefaultDriverService(final DriverRepository driverRepository, CarService carService)
     {
         this.driverRepository = driverRepository;
+        this.carService = carService;
     }
 
 
@@ -113,11 +122,73 @@ public class DefaultDriverService implements DriverService
         return driverRepository.findByOnlineStatus(onlineStatus);
     }
 
+    /**
+     * Select the car for a driver
+     *
+     * @param driverId
+     * @param carId
+     */
+    @Override public DriverDO selectCar(Long driverId, Long carId) throws EntityNotFoundException, OfflineStatusException, CarAlreadyInUseException
+    {
+        DriverDO driver = findDriverChecked(driverId);
+
+        if(driver.getOnlineStatus().equals(OnlineStatus.OFFLINE)) {
+            throw new OfflineStatusException("Only ONLINE drivers can select a car");
+        }
+
+        CarDO car = carService.find(carId);
+
+        if(car.isSelected()) {
+            throw new CarAlreadyInUseException("Car already in use by another driver");
+        }
+
+        updateCarStatus(driver, car);
+
+        driver.setCar(car);
+        driverRepository.save(driver);
+
+        return driver;
+    }
+
+
+    /**
+     * deselect the car for a driver
+     *
+     * @param driverId
+     * @return
+     */
+    @Override public DriverDO deselectCar(Long driverId) throws EntityNotFoundException
+    {
+        DriverDO driver = findDriverChecked(driverId);
+
+        Optional.ofNullable(driver.getCar()).ifPresent(c -> {
+            c.setSelected(false);
+            carService.save(c);
+        });
+
+        driver.setCar(null);
+        driverRepository.save(driver);
+        return driver;
+    }
+
 
     private DriverDO findDriverChecked(Long driverId) throws EntityNotFoundException
     {
         return driverRepository.findById(driverId)
             .orElseThrow(() -> new EntityNotFoundException("Could not find entity with id: " + driverId));
+    }
+
+
+    private void updateCarStatus(DriverDO driver, CarDO car)
+    {
+        car.setSelected(true);
+        carService.save(car);
+
+        Optional<CarDO> currentCar = Optional.ofNullable(driver.getCar());
+        currentCar.ifPresent(c -> {
+            c.setSelected(false);
+            carService.save(c);
+        });
     }
 
 }
