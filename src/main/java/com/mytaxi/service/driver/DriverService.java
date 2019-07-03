@@ -6,6 +6,7 @@ import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
 import com.mytaxi.exception.OfflineStatusException;
+import com.mytaxi.request.SearchRequest;
 
 import java.util.List;
 
@@ -25,4 +26,6 @@ public interface DriverService
     DriverDO selectCar(Long driverId, Long carId) throws EntityNotFoundException, OfflineStatusException, CarAlreadyInUseException;
 
     DriverDO deselectCar(Long driverId) throws EntityNotFoundException;
+
+    List<DriverDO> findByQuery(SearchRequest searchRequest);
 }

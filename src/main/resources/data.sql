@@ -44,11 +44,26 @@ values
 -- manufacturers
 insert into manufacturer(id, date_created, name) values (1, now(), 'BMW');
 insert into manufacturer(id, date_created, name) values (2, now(), 'Peugeot');
-insert into manufacturer(id, date_created, name) values (3, now(), 'Ford');
+insert into manufacturer(id, date_created, name) values (3, now(), 'Tesla');
 
 
 
 -- Create 3 Cars
 
 insert into car (id, date_created, license_plate, seat_count, convertible, deleted, rating, engine_type, manufacturer_id, selected)
-values (1, now(), 'ABC123', 4, FALSE, FALSE, 5, 'GAS', 1, FALSE);
+values (1, now(), 'ABC123', 4, FALSE, FALSE, 4, 'GAS', 1, TRUE);
+
+insert into car (id, date_created, license_plate, seat_count, convertible, deleted, rating, engine_type, manufacturer_id, selected)
+values (2, now(), 'XYZ321', 4, FALSE, FALSE, 5, 'ELECTRIC', 3, FALSE);
+
+insert into car (id, date_created, license_plate, seat_count, convertible, deleted, rating, engine_type, manufacturer_id, selected)
+values (3, now(), 'QWE456', 4, FALSE, FALSE, 2, 'GAS', 2, FALSE);
+
+-- Create 1 user
+
+insert into user (id, date_created, username, password, deleted)
+values (1, now(), 'myTaxi', '$2a$10$ROT6W3leTgFv2440B2unz.yt6bXm8LUxYljs3ri/IHSWEI2FQuXJy', FALSE);
+
+--- Create a driver with car selected
+insert into driver (id, date_created, deleted, online_status, password, username, car_id) values (10, now(), false, 'ONLINE',
+'driver10pw', 'driver10', 1);

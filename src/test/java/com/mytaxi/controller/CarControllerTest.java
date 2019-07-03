@@ -1,19 +1,17 @@
 package com.mytaxi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mytaxi.dataaccessobject.CarRepository;
 import com.mytaxi.datatransferobject.CarDTO;
 import com.mytaxi.domainobject.CarDO;
 import com.mytaxi.domainobject.ManufacturerDO;
 import com.mytaxi.domainvalue.EngineType;
 import com.mytaxi.exception.EntityNotFoundException;
 import com.mytaxi.service.car.CarService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONAssert;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,8 +21,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,18 +33,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(value = CarController.class, secure = false)
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 public class CarControllerTest
 {
-    @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private CarService carService;
-
-    @MockBean
-    private CarRepository carRepository;
 
     private ManufacturerDO mockManufacturer = new ManufacturerDO(1, "Mercedes Benz");
 
@@ -57,6 +50,10 @@ public class CarControllerTest
     private static final String EXAMPLE_CAR_JSON =
         "{  \"licensePlate\": \"ABC123\",  \"seatCount\": 4,  \"convertible\": false,  \"deleted\": false,  \"rating\": 5,  \"manufacturer\": {    \"id\": 1  },  \"selected\": false,  \"engineType\": \"GAS\"}";
 
+    @Before
+    public void setup() {
+        this.mockMvc = MockMvcBuilders.standaloneSetup(new CarController(carService)).build();
+    }
 
     @Test
     public void shouldRetrieveDetailsForCarById() throws Exception
@@ -195,10 +192,12 @@ public class CarControllerTest
 
     }
 
-
-    public static CarDTO asObject(String car) throws IOException
-    {
-        return new ObjectMapper().readValue(car, CarDTO.class);
+    public static String asJsonString(final CarDTO car) {
+        try {
+            return new ObjectMapper().writeValueAsString(car);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getResponseWithOneCar()

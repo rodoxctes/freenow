@@ -9,13 +9,19 @@ import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
 import com.mytaxi.exception.OfflineStatusException;
+import com.mytaxi.request.SearchRequest;
 import com.mytaxi.service.car.CarService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +32,8 @@ import java.util.Optional;
 @Service
 public class DefaultDriverService implements DriverService
 {
+    @PersistenceContext
+    private EntityManager em;
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDriverService.class);
 
@@ -171,6 +179,55 @@ public class DefaultDriverService implements DriverService
         return driver;
     }
 
+    public List<DriverDO> findByQuery(SearchRequest searchRequest)
+    {
+        if (!searchRequest.getSearchCarRequest().isEmpty() && !searchRequest.getSearchDriverRequest().isEmpty())
+        {
+
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<DriverDO> query = cb.createQuery(DriverDO.class);
+            Root<DriverDO> driver = query.from(DriverDO.class);
+            Join<DriverDO, CarDO> car = driver.join("car");
+
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (searchRequest.getSearchDriverRequest().getUserName() != null)
+                predicateList.add(cb.equal(driver.get("username"), searchRequest.getSearchDriverRequest().getUserName()));
+            if (searchRequest.getSearchDriverRequest().getOnlineStatus() != null)
+                predicateList.add(cb.equal(driver.get("onlineStatus"), searchRequest.getSearchDriverRequest().getOnlineStatus()));
+            if (searchRequest.getSearchCarRequest().getLicensePlate() != null)
+                predicateList.add(cb.equal(car.get("licensePlate"), searchRequest.getSearchCarRequest().getLicensePlate()));
+            if (searchRequest.getSearchCarRequest().getSelected() != null)
+                predicateList.add(cb.equal(car.get("selected"), searchRequest.getSearchCarRequest().getSelected()));
+            if (searchRequest.getSearchCarRequest().getSeatCount() != null)
+                predicateList.add(cb.equal(car.get("seatCount"), searchRequest.getSearchCarRequest().getSeatCount()));
+            if (searchRequest.getSearchCarRequest().getRating() != null)
+                predicateList.add(cb.equal(car.get("rating"), searchRequest.getSearchCarRequest().getRating()));
+            Predicate[] predicates = new Predicate[predicateList.size()];
+            predicateList.toArray(predicates);
+            query.where(predicates);
+
+            return em.createQuery(query).getResultList();
+        }
+
+        else {
+            Specification<DriverDO> specification = Specification
+                .<DriverDO>where(hasUserName(searchRequest.getSearchDriverRequest().getUserName()))
+                .and(hasStatus(searchRequest.getSearchDriverRequest().getOnlineStatus()));
+
+            return driverRepository.findAll(specification);
+        }
+
+    }
+
+
+    public static <T> Specification<T> hasUserName(final String userName) {
+        return userName != null ? (root, query, cb) -> cb.equal(root.get("userName"), userName) : null;
+    }
+
+    public static <T> Specification<T> hasStatus(final OnlineStatus status) {
+        return status != null ? (root, query, cb) -> cb.equal(root.get("onlineStatus"), status) : null;
+    }
 
     private DriverDO findDriverChecked(Long driverId) throws EntityNotFoundException
     {

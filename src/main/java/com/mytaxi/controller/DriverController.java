@@ -8,9 +8,11 @@ import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.ConstraintsViolationException;
 import com.mytaxi.exception.EntityNotFoundException;
 import com.mytaxi.exception.OfflineStatusException;
+import com.mytaxi.request.SearchRequest;
 import com.mytaxi.service.driver.DriverService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -99,5 +101,33 @@ public class DriverController
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deselectCar(@Valid @PathVariable long driverId) throws EntityNotFoundException {
         driverService.deselectCar(driverId);
+    }
+
+    @GetMapping("/search/car/")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiOperation(
+        value = "Search for drivers by their attributes (username, online_status) as well as car characteristics (license plate, rating, etc)."
+    )
+    public List<DriverDTO> findDriverByCar(
+        @ApiParam(value = "The driver Name")
+        @RequestParam(required = false) String name,
+        @ApiParam(value = "The driver's status")
+        @RequestParam(required = false) OnlineStatus driverOnlineStatus,
+        @ApiParam(value = "the car's license plate")
+        @RequestParam(required = false) String licensePlate,
+        @ApiParam(value = "the car's status")
+        @RequestParam(required = false) Boolean selected,
+        @ApiParam(value = "Number of seats of the car")
+        @RequestParam(required = false) Integer seatCount,
+        @ApiParam(value = "The car's rating")
+        @RequestParam(required = false) Integer carRating)
+    {
+        SearchRequest.SearchCarRequest searchCarRequest = new SearchRequest.SearchCarRequest(licensePlate, selected, seatCount, carRating);
+
+        SearchRequest.SearchDriverRequest searchDriverRequest = new SearchRequest.SearchDriverRequest(name, driverOnlineStatus);
+
+        SearchRequest searchRequest = new SearchRequest(searchDriverRequest, searchCarRequest );
+
+        return DriverMapper.makeDriverDTOList(driverService.findByQuery(searchRequest));
     }
 }

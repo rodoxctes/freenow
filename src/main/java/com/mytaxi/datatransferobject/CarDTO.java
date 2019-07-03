@@ -41,6 +41,15 @@ public class CarDTO
     private EngineType engineType;
 
     private Long driverId;
+
+    public CarDTO(Long id, String licensePlate, int seatCount, boolean convertible, int rating, EngineType engineType) {
+        this.id = id;
+        this.licensePlate = licensePlate;
+        this.seatCount = seatCount;
+        this.convertible = convertible;
+        this.rating = rating;
+        this.engineType = engineType;
+    }
 }
 
 

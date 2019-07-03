@@ -50,7 +50,7 @@ public class DriverDO
     @JoinColumn(name = "car_id")
     private CarDO car;
 
-    private DriverDO()
+    public DriverDO()
     {
     }
 

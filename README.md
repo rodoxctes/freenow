@@ -75,3 +75,19 @@ Good luck!
 
 
 _NOTE: Please make sure to not submit any personal data with your tests result. Personal data is for example your name, your birth date, email address etc._
+
+---
+##Notes
+
+To try my changes you will to browser to http://localhost:8080/swagger-ui.html
+
+I used jwt to authenticate.
+
+* To create an user to login: http://localhost:8080/swagger-ui.html#/User%20Login/saveUserUsingPOST
+
+* To authenticate: http://localhost:8080/swagger-ui.html#/User%20Login/createAuthenticationTokenUsingPOST
+
+ You can try with:
+ 
+ * username: myTaxi
+ * password: password 

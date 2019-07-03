@@ -1,15 +1,11 @@
 package com.mytaxi.controller;
 
-import com.mytaxi.domainobject.CarDO;
 import com.mytaxi.domainobject.DriverDO;
-import com.mytaxi.domainobject.ManufacturerDO;
-import com.mytaxi.domainvalue.EngineType;
 import com.mytaxi.service.driver.DriverService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,32 +14,31 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(value = DriverController.class, secure = false)
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 public class DriverControllerTest
 {
-    @Autowired
+
+    private DriverDO mockDriver = new DriverDO(10L,"driver", "password");
+
     private MockMvc mockMvc;
 
     @MockBean
     private DriverService driverService;
 
-    private ManufacturerDO mockManufacturer = new ManufacturerDO(1, "Mercedes Benz");
-
-    private CarDO mockCar = new CarDO("XYZ432", 4, EngineType.GAS, mockManufacturer);
-
-    private CarDO mockCarTwo = new CarDO("ACB432", 4, EngineType.ELECTRIC, mockManufacturer);
-
-    private DriverDO mockDriver = new DriverDO(10L,"driver", "password");
-
-
+    @Before
+    public void setup()
+    {
+        this.mockMvc = MockMvcBuilders.standaloneSetup(new DriverController(driverService)).build();
+    }
 
     @Test
     public void shouldSelectCar() throws Exception
@@ -58,7 +53,23 @@ public class DriverControllerTest
             .contentType(MediaType.APPLICATION_JSON);
 
         MvcResult result = mockMvc.perform(requestBuilder).andReturn();
+        MockHttpServletResponse response = result.getResponse();
 
+        assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
+
+    }
+
+    @Test
+    public void shouldDeselectCar() throws Exception
+    {
+        String driverId = "10";
+
+        when(driverService.deselectCar(anyLong())).thenReturn(mockDriver);
+
+        RequestBuilder requestBuilder = delete("/v1/drivers/{driverId}/car", driverId)
+            .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult result = mockMvc.perform(requestBuilder).andReturn();
         MockHttpServletResponse response = result.getResponse();
 
         assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());

@@ -9,11 +9,23 @@ import com.mytaxi.domainvalue.OnlineStatus;
 import com.mytaxi.exception.CarAlreadyInUseException;
 import com.mytaxi.exception.EntityNotFoundException;
 import com.mytaxi.exception.OfflineStatusException;
+import com.mytaxi.request.SearchRequest;
 import com.mytaxi.service.car.CarService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -31,13 +43,30 @@ public class DefaultDriverServiceTest
     @Mock
     private CarService carService;
 
+    @Mock
+    EntityManagerFactory entityManagerFactory;
+
+    @Mock
+    EntityManager entityManager;
+
+    @Mock
+    CriteriaBuilder cb;
+
+    @Mock
+    CriteriaQuery cq;
+
+    @Mock
+    Root<DriverDO> driverDORoot;
+
+    @Mock
+    Join<DriverDO, CarDO> car;
+
 
     private DriverDO mockDriver = new DriverDO(10L,"driver", "password");
 
     private ManufacturerDO mockManufacturer = new ManufacturerDO(1, "Mercedes Benz");
 
     private CarDO mockCar = new CarDO("XYZ432", 4, EngineType.GAS, mockManufacturer);
-
 
 
     @Test
@@ -113,5 +142,48 @@ public class DefaultDriverServiceTest
             assertEquals("Only ONLINE drivers can select a car", e.getMessage());
         }
     }
+
+    @Test
+    public void ShouldFindByQueryWithOnlyDriverRequest() {
+
+        List<DriverDO> drivers = new ArrayList<>();
+
+        SearchRequest.SearchCarRequest  searchCarRequest = new SearchRequest.SearchCarRequest(null, null, null, null);
+        SearchRequest.SearchDriverRequest searchDriverRequest = new SearchRequest.SearchDriverRequest("driver", null);
+        SearchRequest searchRequest = new SearchRequest(searchDriverRequest, searchCarRequest);
+
+        when(driverRepository.findAll(ArgumentMatchers.<Specification<DriverDO>>any())).thenReturn(drivers);
+
+        DriverService driverService = new DefaultDriverService(driverRepository, carService);
+        List<DriverDO> driversResponse = driverService.findByQuery(searchRequest);
+
+        assertEquals(driversResponse, drivers);
+    }
+
+    //TODO fix null pointer exception in the following test
+/*    @Test
+    public void shouldFindDriversAndCarsByQuery() {
+
+        List<DriverDO> drivers = new ArrayList<>();
+
+        SearchRequest.SearchCarRequest  searchCarRequest = new SearchRequest.SearchCarRequest(null, true, null, null);
+        SearchRequest.SearchDriverRequest searchDriverRequest = new SearchRequest.SearchDriverRequest("driver", null);
+        SearchRequest searchRequest = new SearchRequest(searchDriverRequest, searchCarRequest);
+
+
+        when(entityManagerFactory.createEntityManager()).thenReturn(entityManager);
+        when(entityManager.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(any())).thenReturn(cq);
+        when(cq.from(DriverDO.class)).thenReturn(driverDORoot);
+        when(driverDORoot.join("car")).thenReturn(Join<DriverDO, CarDO> car);
+
+
+        DriverService driverService = new DefaultDriverService(driverRepository, carService);
+
+        List<DriverDO> driversResponse = driverService.findByQuery(searchRequest);
+
+        assertEquals(driversResponse, drivers);
+
+    }*/
 
 }
