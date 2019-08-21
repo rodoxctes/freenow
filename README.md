@@ -26,10 +26,6 @@ You should be aware of the following conventions while you are working on this e
 
 You should commit into a local git repository and include the git repository (.git/) in the upload.
 
-_NOTE: Please DO NOT publish the project, e.g. by uploading it to GitHub or the like!_
-
----
-
 
 ## Task 1
  * Write a new Controller for maintaining cars (CRUD).
